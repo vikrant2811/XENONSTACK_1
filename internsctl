@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import pwd
+import subprocess
+import sys
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import stat
+
+VERSION = "v0.1.0"
+
+def get_cpu_info():
+    return subprocess.run(['lscpu'], capture_output=True, text=True).stdout
+
+def get_memory_info():
+    return subprocess.run(['free'], capture_output=True, text=True).stdout
+
+def create_user(username):
+    try:
+        subprocess.run(['sudo', 'useradd', '-m', username])
+        print(f"User '{username}' created successfully.")
+    except Exception as e:
+        print(f"Error creating user '{username}': {e}", file=sys.stderr)
+        
+def list_users(sudo_only=False):
+    if sudo_only:
+        try:
+            sudo_users = subprocess.check_output(['getent', 'group', 'sudo']).decode('utf-8').split(':')[3].split(',')
+            print('\n'.join(sudo_users))
+        except subprocess.CalledProcessError:
+            print("Error: Unable to retrieve sudo users.")
+    else:
+        users = [user.pw_name for user in pwd.getpwall()]
+        print('\n'.join(users))
+    
+def get_file_info(filename, options):
+    stat_info = os.stat(filename)
+    info = {
+        'File': filename,
+        'Access': stat.filemode(stat_info.st_mode),
+        'Size(B)': stat_info.st_size,
+        'Owner': pwd.getpwuid(stat_info.st_uid).pw_name,
+        'Modify': datetime.fromtimestamp(stat_info.st_mtime, tz=ZoneInfo('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M:%S.%f %z')
+    }
+    if options.get('size'):
+        print(info['Size(B)'])
+    elif options.get('permissions'):
+        print(info['Access'])
+    elif options.get('owner'):
+        print(info['Owner'])
+    elif options.get('last-modified'):
+        print(info['Modify'])
+    else:
+        for key, value in info.items():
+            print(f"{key}: {value}")
+
+def main():
+    parser = argparse.ArgumentParser(description='Custom Linux command for managing operations.')
+    parser.add_argument('--version', action='version', version=f'%(prog)s {VERSION}')
+    subparsers = parser.add_subparsers(title='Commands', dest='command', required=True)
+
+    cpu_parser = subparsers.add_parser('cpu', help='Get CPU information')
+    cpu_parser.add_argument('cpu_command', choices=['getinfo'], help='CPU commands')
+
+    memory_parser = subparsers.add_parser('memory', help='Get memory information')
+    memory_parser.add_argument('memory_command', choices=['getinfo'], help='Memory commands')
+
+    user_parser = subparsers.add_parser('user', help='User management')
+    user_subparsers = user_parser.add_subparsers(title='User commands', dest='user_command', required=True)
+
+    user_create_parser = user_subparsers.add_parser('create', help='Create a new user')
+    user_create_parser.add_argument('username', help='Username of the new user')
+
+    user_list_parser = user_subparsers.add_parser('list', help='List users')
+    user_list_parser.add_argument('--sudo-only', action='store_true', help='List sudo users only')
+
+    file_parser = subparsers.add_parser('file', help='File management')
+    file_parser.add_argument('file_command', choices=['getinfo'], help='File commands')
+    file_parser.add_argument('filename', help='Name of the file')
+    file_parser.add_argument('--size', '-s', action='store_true', help='Print size')
+    file_parser.add_argument('--permissions', '-p', action='store_true', help='Print file permissions')
+    file_parser.add_argument('--owner', '-o', action='store_true', help='Print file owner')
+    file_parser.add_argument('--last-modified', '-m', action='store_true', help='Print last modified time')
+
+    args = parser.parse_args()
+
+    if args.command == 'cpu':
+        if args.cpu_command == 'getinfo':
+            print(get_cpu_info())
+
+    elif args.command == 'memory':
+        if args.memory_command == 'getinfo':
+            print(get_memory_info())
+    
+    elif args.command == 'user':
+        if args.user_command == 'create':
+            create_user(args.username)
+        elif args.user_command == 'list':
+            list_users(args.sudo_only)
+    
+    elif args.command == 'file':
+        if args.file_command == 'getinfo':
+            options = {
+                'size': args.size,
+                'permissions': args.permissions,
+                'owner': args.owner,
+                'last-modified': args.last_modified
+            }
+            get_file_info(args.filename, options)
+
+if __name__ == '__main__':
+    main()

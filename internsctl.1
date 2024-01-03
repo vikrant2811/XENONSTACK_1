@@ -1,0 +1,93 @@
+.TH INTERNSCTL 1 "January 2024" "v0.1.0" "internsctl manual"
+
+.SH NAME
+internsctl \- Custom Linux command for managing operations.
+
+.SH SYNOPSIS
+.B internsctl
+[\fIOPTIONS\fP] \fICOMMAND\fP [\fIARGS\fP]
+
+.SH DESCRIPTION
+This command provides various operations for managing interns.
+
+.SH OPTIONS
+.TP
+\fB\-\-help\fP
+Display usage guidelines.
+
+.TP
+\fB\-\-version\fP
+Display command version.
+
+.SH COMMANDS
+.TP
+\fBcpu getinfo\fP
+Get CPU information.
+
+.TP
+\fBmemory getinfo\fP
+Get memory information.
+
+.TP
+\fBuser create \fIusername\fP
+Create a new user.
+
+.TP
+\fBuser list [\-\-sudo\-only]\fP
+List users.
+
+.TP
+\fBfile getinfo \fIfile-name\fP [\-\-size | \-s | \-\-permissions | \-p | \-\-owner | \-o | \-\-last-modified | \-m]\fP
+Get information about a file.
+
+.SH EXAMPLES
+.TP
+.B internsctl cpu getinfo
+Get CPU information.
+
+.TP
+.B internsctl memory getinfo
+Get memory information.
+
+.TP
+.B internsctl user create john
+Create a new user with username 'john'.
+
+.TP
+.B internsctl user list
+List all regular users.
+
+.TP
+.B internsctl user list \-\-sudo-only
+List users with sudo permissions.
+
+.TP
+.B internsctl file getinfo example.txt
+Get information about the file 'example.txt'.
+
+.TP
+.B internsctl file getinfo example.txt \-\-size
+Get the size of the file 'example.txt'.
+
+.TP
+.B internsctl file getinfo example.txt \-\-permissions
+Get the permissions of the file 'example.txt'.
+
+.TP
+.B internsctl file getinfo example.txt \-\-owner
+Get the owner of the file 'example.txt'.
+
+.TP
+.B internsctl file getinfo example.txt \-\-last-modified
+Get the last modified time of the file 'example.txt'.
+
+.SH AUTHOR
+Vikrant
+
+.SH "SEE ALSO"
+.BR lscpu (1),
+.BR free (1),
+.BR useradd (8),
+.BR passwd (1),
+.BR getent (1),
+.BR stat (1)
